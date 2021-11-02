@@ -1,4 +1,4 @@
-package MyWallet
+package main
 
 /*
 import (
