@@ -7,7 +7,7 @@ type mipin interface {
 
 type OpcionAccount func(*Account)
 
-func Nombre(nombre string) OpcionAccount {
+func NombreAccount(nombre string) OpcionAccount {
 	return func(acco *Account) {
 		acco.Nombre = nombre
 	}

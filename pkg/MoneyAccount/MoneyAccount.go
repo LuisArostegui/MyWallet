@@ -4,9 +4,8 @@ import (
 	"time"
 )
 
-type cuenta interface {
-	GetSaldo() float64
-	GetidAccount() string
+type Cuenta interface {
+	GetId() string
 }
 
 type Account struct {
@@ -56,10 +55,10 @@ func (ba BankAccount) GetId() string {
 	return ba.idAccount
 }
 
+func (ba Account) GetId() string {
+	return "N/A"
+}
+
 func (ba BankAccount) SetId(id string) {
 	ba.idAccount = id
 }
-
-/* func (a Account) GetTiempoCreacion() string{
-	return uint8(time.Now().Year() - a.fnac.Year())
-} */
