@@ -23,3 +23,5 @@ func Fnac(fnac time.Time) Opcion {
 		user.fnac = fnac
 	}
 }
+
+// correguir
