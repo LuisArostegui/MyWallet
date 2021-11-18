@@ -56,7 +56,7 @@ func (ba BankAccount) GetId() string {
 }
 
 func (ba Account) GetId() string {
-	return "N/A"
+	return ""
 }
 
 func (ba BankAccount) SetId(id string) {
