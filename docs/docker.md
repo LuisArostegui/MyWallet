@@ -89,17 +89,24 @@ Se tiene que crear un Github Action que crea la imagen del contenedor y la publi
 ```yaml
 on:
   push:
-    branches: # Indicamos la rama de nuestro repositorio que queremos analizar.
+    branches:
       - main
     paths: # Indicamos los ficheros que tiene que analizar para realizar la publicación de la imagen.
-      - '**.go' #  Si estos ficheros no se han modificado no se realiza la publicación
+      - Dockerfile #  Si estos ficheros no se han modificado no se realiza la publicación
       - go.mod
   pull_request:
     branches:
       - main
+    paths:
+      - Dockerfile
+      - go.mod
+
 ```
-* Bajo mi punto de vista, si se realiza un push a la rama principal y hemos modificado algún fichero .go o el go.mod deberíamos de actualizar la imagen ya que habremos añadido código que afectará a la lógica de negocio de nuestro proyecto. Otra opción puede ser añadir `path-ignore` e incluir los ficheros, por ejemplo, de documentación, con esto conseguiriamos que si se edita un fichero de documentación y se hace push a la rama principal no se actualice la imagen en docker hub.
-* Cuando hacemos merge desde un pull request a la rama principal, en la asignatura significa que siempre se van a realizar cambios respecto a la lógica de negocio de nuestro proyecto, es decir, vamos a estar realizando cambios importantes en nuestro proyecto por esto pienso que para este repositorio concreto si hacemos merge de un pull request a la rama main se ejecute la publicación de la imagen.
+
+La imagen depende de las dependencias y del Dockerfile, por tanto:
+
+* Se indica que cuando se haga un push bien a la rama main o bien se modifiquen las dependencias del proyecto, go.mod, o se modifique el Dockerfile se generará una imagen de nuestro proyecto.
+* Cuando se realice un pull request hacia la rama main o bien se modique el Dockerfile o go.mod, se generará una nueva imagen.
 
 2. Creo una variable para especificar el repositorio del que queremos crear y publicar una imagen.
 ```yaml
