@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - 'Dockerfile'
+      - Dockerfile
       - go.mod
 
 # Especificamos lo que queramos que suceda dentro de nuestro flujo de trabajo.
