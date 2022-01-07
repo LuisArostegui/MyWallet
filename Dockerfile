@@ -6,7 +6,6 @@ ENV TEST_DIR=/app/test
 
 RUN addgroup -S mywallet && adduser -S mywallet -G mywallet
 
-# Cambiamos al nuevo usuario
 USER mywallet
 
 WORKDIR $TEST_DIR
