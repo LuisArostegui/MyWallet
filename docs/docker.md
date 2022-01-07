@@ -24,9 +24,38 @@ Docker tiene muchas imagenes de golang, cada una de ellas diseñada para un caso
 * `golang:<version>-alpine`, esta imagen se basa en el proyecto Alpine Linux. Las imagenes Alpine Linux son mucho más livianas que la mayoría de imágenes base de distribución (~5 MB). Esta variante es experimental y no es oficialmente compatible con el [proyecto Go](https://github.com/golang/go/issues/19938). La principal advertencia a tener en cuenta es que utiliza **musl libc** en lugar de **glibc**, puede llegar a provocar un comportamiento inesperador en nuestra aplicación. En [este artículo](https://news.ycombinator.com/item?id=10782897) se conversa acerca de los problemas que puede traer este tipos de imagenes.
 * `golang:<version>-windowsservercore`, esta imagen se basa en Windows Server Core.
 
-En nuestro caso tenemos que debatir se seleccionar la imagen basada en Debian o en Alpine. Como hemos comentado la principal diferencia entre estas es el tamaño y Alpine viene con la desventaja de que la imagen es una variante experimental pero esto para nuestro proyecto en un principio no acarrea ningún problema y se va a optar por la imagen Alpine por su menor tamaño respecto a Debian. En concreo la versión de la imagen va a ser la 1.17, hay una versión 1.18 a dia de hoy, 28/12/2021, pero es una versión beta, la version 1.17 es la última más estable actualmente.
+En nuestro caso tenemos que debatir se seleccionar la imagen basada en Debian o en Alpine. Como hemos comentado la principal diferencia entre estas es el tamaño y Alpine viene con la desventaja de que la imagen es una variante experimental pero esto para nuestro proyecto en un principio no acarrea ningún problema y se va a optar por la imagen Alpine por su menor tamaño respecto a Debian. En concreto la versión de la imagen va a ser la 1.17, hay una versión 1.18 a dia de hoy, 28/12/2021, pero es una versión beta, la version 1.17 es la última más estable actualmente.
 
 **Nota:** Al ir avanzando con el objetivo me he dado cuenta de la importancia de Alpine en este proyecto, ofrece muchos paquetes que ayudan al desarrollador, por ejemplo al querer probar otro tipo de imagenes para ver su comportamiento surgen error a la hora de la construcción del Dockerfile.Por ejemplo, adduser es un comando que con la imagen bulleye no me ha funcionado. Por tanto, Alpine es la mejor opción para nuestro proyecto.
+
+Para completar la comparación entre imagenes bajo mi punto de vista se debería de realizar una comparación más exhaustiva de estas, como por ejemplo comprobar las diferencias en el Dockerfile, es decir, al hacer el setup de las imagenes dependiendo de la imagen escogida vamos a poner operaciones diferentes, un ejemplo lo encontré con `adduser` que no actua de igual forma en imagenes Debian y Alpine. Un ejemplo sería el siguiente:
+
+```
+FROM golang:1.17-buster
+RUN apt-get update && apt-get install build-essential
+```
+Esto sería un ejemplo de una pequeña porción de Dockerfile con una imagen Debian donde podemos hacer uso de `apt`. En cambio para montar algo similar con una imagen Alpine deberíamos de hacer lo siguiente:
+
+```
+FROM golang:1.17-alpine
+RUN apk update && apk build-essetial
+```
+Usamos la herramienta `apk` en lugar de `apt`.
+
+Otro punto que se puede analizar más a fondo es el tema del peso de las imagenes en mi proyecto estas son las diferencias obtenidas:
+
+```
+mywallet                   bullseye        acca493efc63   3 seconds ago        976MB
+mywallet                   buster          e317e0d10062   37 seconds ago       919MB
+mywallet                   stretch         232c3b59a871   About a minute ago   879MB
+mywallet                   alpine          cbc92daa90aa   2 minutes ago        351MB
+```
+
+Encotramos una diferencia bastante notoria relativa al peso de las imagenes, la imagen Alpine es bastante más ligera que el resto.
+
+Por último se podría analizar el tiempo de compilación entre las imagenes. [Aquí](https://nickjanetakis.com/blog/benchmarking-debian-vs-alpine-as-a-base-docker-image) dejo un articulo donde se analiza más exhaustivamente las diferencias entre imagenes Debian y Alpine.
+
+
 
 ### Facilitar uso de Docker con nuestro task runner
 
@@ -50,6 +79,40 @@ Se ha automatizado la ejecución de los tests en el task runner. Esto se consigu
 6. La directiva COPY permite copiar los ficheros de dependecias a la carpeta /app/test.
 7. WORKDIR, especificamos la ruta donde queremos trabajar.
 8. ENTRYPOINT, indicamos la acción a ejecutar, en este caso `task test`.
+
+### Comentarios en el Dockerfile
+
+```
+#Imagen base para docker
+FROM golang:1.17-alpine
+
+# Metadatos de información del encargado de mantenimiento
+LABEL maintainer="Luis Aróstegui Ruiz <luisarostegui@correo.ugr.es>"
+
+# Creamos variable de entorno para el directorio donde vamos a ejecutar los tests
+ENV TEST_DIR=/app/test
+
+# Añadimos usuario sin privilegios de superusuario y cremos un grupo para dicho usuario
+RUN addgroup -S mywallet && adduser -S mywallet -G mywallet
+
+# Cambiamos al nuevo usuario
+USER mywallet
+
+#Establecemos el directorio donde vamos a ejecutar los tests con nuestro nuevo usuario
+WORKDIR $TEST_DIR
+
+#Instalamos modulos necesarios para compilar
+COPY go.mod ./
+
+#Ahora podemos descargar y actualizar las dependecias
+RUN go mod download
+
+#Instalamos nuestro task runner
+RUN go install github.com/go-task/task/v3/cmd/task@latest
+
+#Especificamos el ejecutable que usará el contenedor
+ENTRYPOINT ["task", "test"]
+```
 
 ## Uso de Docker Hub
 
