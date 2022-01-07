@@ -64,8 +64,6 @@ Se tiene que crear un Github Action que crea la imagen del contenedor y la publi
 ```yaml
 on:
   push:
-    branches:
-      - main
     paths: # Indicamos los ficheros que tiene que analizar para realizar la publicación de la imagen.
       - Dockerfile #  Si estos ficheros no se han modificado no se realiza la publicación
       - go.mod
@@ -82,12 +80,8 @@ La imagen depende de las dependencias y del Dockerfile, por tanto:
 
 * Se indica que cuando se haga un push bien a la rama main o bien se modifiquen las dependencias del proyecto, go.mod, o se modifique el Dockerfile se generará una imagen de nuestro proyecto.
 * Cuando se realice un pull request hacia la rama main o bien se modique el Dockerfile o go.mod, se generará una nueva imagen.
+* Antes se tenía que cuando se hiciese un push a la rama main se actualizase la imagen, pero en este proyecto se avanza mergeando PR de una rama al main por tanto nunca se va a hacer un push a la rama main directamente.
 
-2. Creo una variable para especificar el repositorio del que queremos crear y publicar una imagen.
-```yaml
-env:
-  REPO: mywallet
-```
 3. Especificamos que queremos que suceda dentro de nuestro flujo de trabajo.
 ```yaml
 jobs:
@@ -102,13 +96,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Build and push # Contruimos la imagen y la publicamos
+      - name: Build and push # Construimos la imagen y la publicamos
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/$REPO:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/mywallet:latest
 ```
 
 

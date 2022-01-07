@@ -2,9 +2,7 @@ name: Publish Docker Image in Docker Hub
 
 # Indicamos activación cuando el código se envía a la rama principal del repo 
 on:
-  push:
-    branches:
-      - main
+  push: 
     paths:
       - Dockerfile
       - go.mod
