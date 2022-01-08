@@ -112,12 +112,6 @@ on:
     paths: # Indicamos los ficheros que tiene que analizar para realizar la publicación de la imagen.
       - Dockerfile #  Si estos ficheros no se han modificado no se realiza la publicación
       - go.mod
-  pull_request:
-    branches:
-      - main
-    paths:
-      - Dockerfile
-      - go.mod
 
 ```
 

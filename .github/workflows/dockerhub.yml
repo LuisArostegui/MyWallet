@@ -5,13 +5,7 @@ on:
     paths:
       - Dockerfile
       - go.mod
-  pull_request:
-    branches:
-      - main
-    paths:
-      - Dockerfile
-      - go.mod
-
+      
 jobs:
   build:
     runs-on: ubuntu-latest
