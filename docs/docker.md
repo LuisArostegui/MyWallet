@@ -1,60 +1,42 @@
 # Contenedor de pruebas
 
-En anteriores commits había información sobre Docker y algunas de sus alternativas pero como el objetivo indica que se use Docker se ha eliminado este apartado y evitar relleno.
+Para tener una forma de hacer que la aplicación sea portable y esté lista para integrase con CI/CD, debemos de elegir una imagen base que lo acompañe. Los principios básicos que se debe de seguir esta imagen base son:
 
-## Integración de Docker en nuestro proyecto
-
-### Cuestiones a tener en cuenta en la elección de una imagen
-
-Nos vamos a encontrar, en general, con dos tipos de imagen distintas, una basada en debian y otra en Alpine. Las diferencias entre estas dos son las siguientes:
-
-* El tamaño entre una y otra. Alpine tiene un tamaño menor que Debian. Con esto conseguimos que operaciones como construir, pull y push sean más rápidas.
-* Consumir menos memoria por el propio sistema operativo en comparación con Debian. Alpine se considera seguro y rápido.
-
-Los requisitos que se buscan son:
-
-* El tamaño de la imagen debe de ser lo más ligera posible para agilizar el trabajo.
-* La imagen debería de ofrecer facilidades para construir nuestra imagen, como por ejemplo herramientas para instalar otro tipo de aplicaciones necesarias para el proyecto.
+* Debe de ser estable, esto implica que siempre debe de funcionar siempre de igual manera, es decir, que dadas las mismas entradas y condiciones se producirán invariablemente las mismas salidas y condiciones. Esto evitará errores y problemas que dependan del entorno. Por tanto siempre tendremos que utilizar bibliotecas compatibles.
+* Debe de ser una imagen ligera, siempre que se pueda, es decir, tener las funcionalidades necesarias de Go para cumplir con la correcta construcción y ejecución de nuestro proyecto. Basicamente, esto sirve para acelerar la construcción, la implementación y también reducir costos con el almacenamiento y la salida de la red si está utilizando algún proveedor de la nube.
+* Debe de recibir actualizaciones frecuentes, de esta manera se evitarán problemas de seguridad y rendimiento.
 
 ### Imagen de Golang
 
-Docker tiene muchas imagenes de golang, cada una de ellas diseñada para un caso de uso específico:
+Teniendo en cuenta los requisitos nombrados podremos lograr un tamaño mínimo de imagen de Docker utilizando imagenes base que se centran en el minimalismo, como Alpine Linux. Dentro de Docker Hub nos vamos a centrar en la imagen oficial de Golang suministrada por Dockerhub, ya que hoy dia es la que más actualizaciones recibe y con mayor frecuencia. Tenemos otras opciones de *Verified Publisher* que son entidades comerciales que publican imagenes muy confiables y estan mantenidas por ellos, como Circle CI o portainer, en el caso de Circle CI las actualizaciones se reciben cada 3/4 semanas y en el caso de portainer la última actualización se recibió hace 4 años. Por tanto, teniendo en cuenta los principios básicos vamos a centramos en las imagenes oficiales de Dockerhub.
+
+Las variantes que nos encontramos son:
 
 * `golang:<version>`, es la imagen por defecto. Si no estamos seguros de cuáles son nuestras necesidades, probablemente esta es la mejor opción. Además puede incluir etiquetas como pueden ser *bullseye*, *buster* o *stretch*. Estas etiquetas son los nombres de código de la suite para las versiones de Debian e indican en que versión se basa la imagen. 
 * `golang:<version>-alpine`, esta imagen se basa en el proyecto Alpine Linux. Las imagenes Alpine Linux son mucho más livianas que la mayoría de imágenes base de distribución (~5 MB). Esta variante es experimental y no es oficialmente compatible con el [proyecto Go](https://github.com/golang/go/issues/19938). La principal advertencia a tener en cuenta es que utiliza **musl libc** en lugar de **glibc**, puede llegar a provocar un comportamiento inesperador en nuestra aplicación. En [este artículo](https://news.ycombinator.com/item?id=10782897) se conversa acerca de los problemas que puede traer este tipos de imagenes.
 * `golang:<version>-windowsservercore`, esta imagen se basa en Windows Server Core.
 
-En nuestro caso tenemos que debatir se seleccionar la imagen basada en Debian o en Alpine. Como hemos comentado la principal diferencia entre estas es el tamaño y Alpine viene con la desventaja de que la imagen es una variante experimental pero esto para nuestro proyecto en un principio no acarrea ningún problema y se va a optar por la imagen Alpine por su menor tamaño respecto a Debian. En concreto la versión de la imagen va a ser la 1.17, hay una versión 1.18 a dia de hoy, 28/12/2021, pero es una versión beta, la version 1.17 es la última más estable actualmente.
 
-**Nota:** Al ir avanzando con el objetivo me he dado cuenta de la importancia de Alpine en este proyecto, ofrece muchos paquetes que ayudan al desarrollador, por ejemplo al querer probar otro tipo de imagenes para ver su comportamiento surgen error a la hora de la construcción del Dockerfile.Por ejemplo, adduser es un comando que con la imagen bulleye no me ha funcionado. Por tanto, Alpine es la mejor opción para nuestro proyecto.
+Como candidatos a nuestro proyecto:
 
-Para completar la comparación entre imagenes bajo mi punto de vista se debería de realizar una comparación más exhaustiva de estas, como por ejemplo comprobar las diferencias en el Dockerfile, es decir, al hacer el setup de las imagenes dependiendo de la imagen escogida vamos a poner operaciones diferentes, un ejemplo lo encontré con `adduser` que no actua de igual forma en imagenes Debian y Alpine. Un ejemplo sería el siguiente:
+* [golang:1.17-stretch](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/stretch/Dockerfile) Debian 11, se elige esta version de Debian porque es la última version más estable que se ha lanzado.
+* [golang:1.17-alpine](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/alpine3.15/Dockerfile) Alpine 3.15, se elige está porque es rápida y ligera, una de las más populares  imagenes base para contenedores Docker.
 
-```
-FROM golang:1.17-buster
-RUN apt-get update && apt-get install build-essential
-```
-Esto sería un ejemplo de una pequeña porción de Dockerfile con una imagen Debian donde podemos hacer uso de `apt`. En cambio para montar algo similar con una imagen Alpine deberíamos de hacer lo siguiente:
+Se elige la versión 1.17 de Golang porque es una de las versiones más recientes y que recibe con mayor frecuencia actualizaciones, nuestro proyecto hasta el momento ha estado trabajando en este versión de Go. Se puede observar el soporte y últimas actualizaciones de Go en [esta página](https://endoflife.date/go).
 
-```
-FROM golang:1.17-alpine
-RUN apk update && apk build-essetial
-```
-Usamos la herramienta `apk` en lugar de `apt`.
-
-Otro punto que se puede analizar más a fondo es el tema del peso de las imagenes en mi proyecto estas son las diferencias obtenidas:
+## Análisis de construcción
+Se analiza en espacio que ocupa cada imagen base:
 
 ```
-mywallet                   bullseye        acca493efc63   3 seconds ago        976MB
-mywallet                   buster          e317e0d10062   37 seconds ago       919MB
 mywallet                   stretch         232c3b59a871   About a minute ago   879MB
 mywallet                   alpine          cbc92daa90aa   2 minutes ago        351MB
 ```
 
-Encotramos una diferencia bastante notoria relativa al peso de las imagenes, la imagen Alpine es bastante más ligera que el resto.
+Encontramos una diferencia bastante notoria relativa al peso de las imagenes, la imagen Alpine es bastante más ligera que el resto.
 
-Por último se podría analizar el tiempo de compilación entre las imagenes. [Aquí](https://nickjanetakis.com/blog/benchmarking-debian-vs-alpine-as-a-base-docker-image) dejo un articulo donde se analiza más exhaustivamente las diferencias entre imagenes Debian y Alpine.
+Aun no se puede tomar una decisión final, analizando el rendimiento de las imagenes encontré [esta página](https://nickjanetakis.com/blog/benchmarking-debian-vs-alpine-as-a-base-docker-image) donde se realiza un benchmarking entre imagenes Debian y Alpine. La conclusión es que son dos imagenes con las que se obtienen resultados muy similares y que a no ser que se encuentren errores significativos con Alpine por su tamaño y velocidad es más recomendable. Destacar las desventajas que nos encontramos con Alpine es L que utiliza **musl libc** en lugar de **glibc**, puede llegar a provocar un comportamiento inesperador en nuestra aplicación. En [este artículo](https://news.ycombinator.com/item?id=10782897) se conversa acerca de los problemas que puede traer este tipos de imagenes.
 
+Por tanto, mi decisión final es que a no ser que se encuentre algún error importante con imagenes Alpine se usará `golang:1.17-alpine` como imagen base para nuestro proyecto.
 
 
 ### Facilitar uso de Docker con nuestro task runner
