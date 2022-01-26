@@ -5,6 +5,7 @@ Para tener una forma de hacer que la aplicación sea portable y esté lista para
 * Debe de ser estable, esto implica que siempre debe de funcionar siempre de igual manera, es decir, que dadas las mismas entradas y condiciones se producirán invariablemente las mismas salidas y condiciones. Esto evitará errores y problemas que dependan del entorno. Por tanto siempre tendremos que utilizar bibliotecas compatibles.
 * Debe de ser una imagen ligera, siempre que se pueda, es decir, tener las funcionalidades necesarias de Go para cumplir con la correcta construcción y ejecución de nuestro proyecto. Basicamente, esto sirve para acelerar la construcción, la implementación y también reducir costos con el almacenamiento y la salida de la red si está utilizando algún proveedor de la nube.
 * Debe de recibir actualizaciones frecuentes, de esta manera se evitarán problemas de seguridad y rendimiento.
+
 * Debe ofrecer un buen rendimiento, esto abarca desde el tamaño de la imagen hasta la duración de la ejecución de los tests pasando por el tiempo construcción del contenedor.
 
 
