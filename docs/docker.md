@@ -1,9 +1,9 @@
 # Contenedor de pruebas
 
-Para tener una forma de hacer que la aplicación sea portable y esté lista para integrase con CI/CD, debemos de elegir una imagen base que lo acompañe. Los principios básicos que se debe de seguir esta imagen base son:
+Para tener una forma de hacer que la aplicación sea portable y esté lista para integrarse con CI/CD, debemos de elegir una imagen base que lo acompañe. Los principios básicos que se debe de seguir esta imagen base son:
 
 * Debe de ser estable, esto implica que siempre debe de funcionar siempre de igual manera, es decir, que dadas las mismas entradas y condiciones se producirán invariablemente las mismas salidas y condiciones. Esto evitará errores y problemas que dependan del entorno. Por tanto siempre tendremos que utilizar bibliotecas compatibles.
-* Debe de ser una imagen ligera, siempre que se pueda, es decir, tener las funcionalidades necesarias de Go para cumplir con la correcta construcción y ejecución de nuestro proyecto. Basicamente, esto sirve para acelerar la construcción, la implementación y también reducir costos con el almacenamiento y la salida de la red si está utilizando algún proveedor de la nube.
+* Debe de ser una imagen ligera, siempre que se pueda, es decir, tener las funcionalidades necesarias de Go para cumplir con la correcta construcción y ejecución de nuestro proyecto. Básicamente, esto sirve para acelerar la construcción, la implementación y también reducir costos con el almacenamiento y la salida de la red si está utilizando algún proveedor de la nube.
 * Debe de recibir actualizaciones frecuentes, de esta manera se evitarán problemas de seguridad y rendimiento.
 
 * Debe ofrecer un buen rendimiento, esto abarca desde el tamaño de la imagen hasta la duración de la ejecución de los tests pasando por el tiempo construcción del contenedor.
@@ -11,23 +11,23 @@ Para tener una forma de hacer que la aplicación sea portable y esté lista para
 
 ## Imagen de Golang
 
-Teniendo en cuenta los requisitos nombrados podremos lograr un tamaño mínimo de imagen de Docker utilizando imagenes base que se centran en el minimalismo, como Alpine Linux. Dentro de Docker Hub nos vamos a centrar en la imagen oficial de Golang suministrada por Dockerhub, ya que hoy dia es la que más actualizaciones recibe y con mayor frecuencia. Tenemos otras opciones de *Verified Publisher* que son entidades comerciales que publican imagenes muy confiables y estan mantenidas por ellos, como Circle CI o portainer, en el caso de Circle CI las actualizaciones se reciben cada 3/4 semanas y en el caso de portainer la última actualización se recibió hace 4 años. Por tanto, teniendo en cuenta los requisitos nombrados vamos a centramos en las imagenes oficiales de Dockerhub.
+Teniendo en cuenta los requisitos nombrados podremos lograr un tamaño mínimo de imagen de Docker utilizando imágenes base que se centran en el minimalismo, como Alpine Linux. Dentro de Docker Hub nos vamos a centrar en la imagen oficial de Golang suministrada por Dockerhub, ya que hoy día es la que más actualizaciones recibe y con mayor frecuencia. Tenemos otras opciones de *Verified Publisher* que son entidades comerciales que publican imágenes muy confiables y están mantenidas por ellos, como Circle CI o portainer, en el caso de Circle CI las actualizaciones se reciben cada 3/4 semanas y en el caso de portainer la última actualización se recibió hace 4 años. Por tanto, teniendo en cuenta los requisitos nombrados vamos a centrarnos en las imágenes oficiales de Dockerhub.
 
 Las variantes que nos encontramos son:
 
 * `golang:<version>`, es la imagen por defecto. Si no estamos seguros de cuáles son nuestras necesidades, probablemente esta es la mejor opción. Además puede incluir etiquetas como pueden ser *bullseye*, *buster* o *stretch*. Estas etiquetas son los nombres de código de la suite para las versiones de Debian e indican en que versión se basa la imagen. 
-* `golang:<version>-alpine`, esta imagen se basa en el proyecto Alpine Linux. Las imagenes Alpine Linux son mucho más livianas que la mayoría de imágenes base de distribución (~5 MB). Esta variante es experimental y no es oficialmente compatible con el [proyecto Go](https://github.com/golang/go/issues/19938). La principal advertencia a tener en cuenta es que utiliza **musl libc** en lugar de **glibc**, puede llegar a provocar un comportamiento inesperador en nuestra aplicación. En [este artículo](https://news.ycombinator.com/item?id=10782897) se conversa acerca de los problemas que puede traer este tipos de imagenes.
+* `golang:<version>-alpine`, esta imagen se basa en el proyecto Alpine Linux. Las imágenes Alpine Linux son mucho más livianas que la mayoría de imágenes base de distribución (~5 MB). Esta variante es experimental y no es oficialmente compatible con el [proyecto Go](https://github.com/golang/go/issues/19938). La principal advertencia a tener en cuenta es que utiliza **musl libc** en lugar de **glibc**, puede llegar a provocar un comportamiento inesperador en nuestra aplicación. En [este artículo](https://news.ycombinator.com/item?id=10782897) se conversa acerca de los problemas que puede traer este tipo de imágenes. [En esta página](https://wiki.musl-libc.org/functional-differences-from-glibc.html) se comentan las diferencias funcionales entre `glibc` y `musl libc`. Las principales diferencias que hay entre ambas librerías son cuestiones que no van a afectar directamente a nuestro proyecto, por ejemplo, si hiciesemos uso de un gestor de paquetes con una imagen Alpine tendremos que usar `apk` y con imagenes que usen la librería glibc se usaría `apt`, pero esto no nos concierne ya que no tenemos que instalar paquetes para que nuestro proyecto funcione correctamente. [Aquí](https://honnef.co/posts/2015/06/statically_compiled_go_programs__always__even_with_cgo__using_musl/) se comenta que si se usa el paquete cgo para usar funciones de C en Go necesitará este enlazarse con una librería libc, en este caso si podriamos tener problemas al elegir una imagen y otra, pero como digo para nuestro proyecto no existen tales dependecias, solamente existe la de Task y las dependecias reflejadas en go.mod.
 * `golang:<version>-windowsservercore`, esta imagen se basa en Windows Server Core.
 
 
 ### Versiones de Go
-Dentro de las posibles imagenes tenemos que saber elegir la versión de Go para ejecutar nuestro proyecto, las distintas versiones las podemos encontrar [aquí](https://go.dev/doc/devel/release). Tenemos que usar una versión que permita obtener los resultados esperados en nuestra aplicación, que tenga soporte y actualizaciones frecuentemente. Tanto [aquí](https://endoflife.date/go) como la [página oficial](https://go.dev/doc/devel/release), podemos ver que las versiones 1.16 y 1.17 son actualmente tienen soporte, por tanto las versiones 1.15 y anteriores quedan descartadas, según los requisitos nombrados. Vamos a tener en cuenta, por ahora, ambas versiones y realizaremos pruebas con ambas para obtener una conclusión final. Cabe mencionar que la versión 1.17 recibe actualizaciones más a menudo que la versión 1.16.
+Dentro de las posibles imágenes tenemos que saber elegir la versión de Go para ejecutar nuestro proyecto, las distintas versiones las podemos encontrar [aquí](https://go.dev/doc/devel/release). Tenemos que usar una versión que permita obtener los resultados esperados en nuestra aplicación, que tenga soporte y actualizaciones frecuentemente. Tanto [aquí](https://endoflife.date/go) como la [página oficial](https://go.dev/doc/devel/release), podemos ver que las versiones 1.16 y 1.17 son actualmente tienen soporte, por tanto las versiones 1.15 y anteriores quedan descartadas, según los requisitos nombrados. Vamos a tener en cuenta, por ahora, ambas versiones y realizaremos pruebas con ambas para obtener una conclusión final. Cabe mencionar que la versión 1.17 recibe actualizaciones más a menudo que la versión 1.16.
 
 
 Como candidatos a nuestro proyecto:
 
-* [golang:1.17.6-bullseye](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/bullseye/Dockerfile) Debian 11, se selecciona como candidato porque actualmente es la versión estable de Debian, lo podemos comprobar tanto [aquí](https://wiki.debian.org/Status/Stable) como [aquí](https://wiki.debian.org/DebianBullseye). Dado que uno de nuestro requisitos es elegir una versión estable, esta opción se ajusta a nuestros criterios.
-* [golang:1.17.6-alpine](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/alpine3.15/Dockerfile) Alpine 3.15, se elige está porque es rápida y ligera, una de las más populares imagenes base para contenedores Docker.
+* [golang:1.17.6-bullseye](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/bullseye/Dockerfile) Debian 11, se selecciona como candidato porque actualmente es la versión estable de Debian, lo podemos comprobar tanto [aquí](https://wiki.debian.org/Status/Stable) como [aquí](https://wiki.debian.org/DebianBullseye). Dado que uno de nuestros requisitos es elegir una versión estable, esta opción se ajusta a nuestros criterios.
+* [golang:1.17.6-alpine](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.17/alpine3.15/Dockerfile) Alpine 3.15, se elige está porque es rápida y ligera, una de las más populares imágenes base para contenedores Docker.
 * [golang:1.16-bullseye](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.16/bullseye/Dockerfile).
 * [golang:1.16-alpine](https://github.com/docker-library/golang/blob/6b93987c3ec7bb3082dd54a46e9b6b8de95b0eb1/1.16/alpine3.15/Dockerfile).
 
@@ -82,7 +82,7 @@ user	0m0,068s
 sys	0m0,046s
 ```
 
-Los resultados son prácticamente iguales, variando a nivel de milesimas.
+Los resultados son prácticamente iguales, variando a nivel de milésimas.
 
 ### Tamaño de la imagen
 Se analiza en espacio que ocupa cada imagen base:
@@ -94,9 +94,9 @@ go_bullseye_1.17           latest          d2c15c730270       976MB
 go_alpine_1.17             latest          8c6c1dda8a53       351MB
 ```
 
-Encontramos una diferencia bastante notoria relativa al peso de las imagenes, la imagen Alpine es bastante más ligera que el resto. La más ligera es la de la versión 1.16 de Go, pero en tan solo 14MB. Teniendo en cuenta nuestros requisitos, la imagen de Alpine es una clara candidata para nuestro proyecto.
+Encontramos una diferencia bastante notoria relativa al peso de las imágenes, la imagen Alpine es bastante más ligera que el resto. La más ligera es la de la versión 1.16 de Go, pero en tan solo 14MB. Teniendo en cuenta nuestros requisitos, la imagen de Alpine es una clara candidata para nuestro proyecto.
 
-Aun no se puede tomar una decisión final, analizando el rendimiento de las imagenes encontré [esta página](https://nickjanetakis.com/blog/benchmarking-debian-vs-alpine-as-a-base-docker-image) donde se realiza un benchmarking entre imagenes Debian y Alpine. La conclusión es que son dos imagenes con las que se obtienen resultados muy similares y que a no ser que se encuentren errores significativos con Alpine por su tamaño y velocidad es más recomendable.
+Aun no se puede tomar una decisión final, analizando el rendimiento de las imágenes encontré [esta página](https://nickjanetakis.com/blog/benchmarking-debian-vs-alpine-as-a-base-docker-image) donde se realiza un benchmarking entre imágenes Debian y Alpine. La conclusión es que son dos imágenes con las que se obtienen resultados muy similares y que a no ser que se encuentren errores significativos con Alpine por su tamaño y velocidad es más recomendable.
 
 
 ### Tiempos de ejecución
@@ -126,7 +126,7 @@ ok  	MyWallet/internal/mywallet	0.001s
 
 ### Conclusión
 
-Los tiempos de ejecución y de construcción son prácticamente iguales, la principal diferencia se encuentra en el tamaño de la imagen, en este apartado Alpine sale claro vencedor. Por tanto, mi decisión final es que a no ser que se encuentre algún error importante con imagenes Alpine se usará `golang:1.17-alpine` como imagen base para nuestro proyecto. La versión de Go que he elegido es la 1.17, si es verdad que la versión 1.16 pesaba algo menos, pero me parece algo poco significativo, más significativo me parece que una versión reciba más actualizaciones que la otra, por esto se elije la versión 1.17.
+Los tiempos de ejecución y de construcción son prácticamente iguales, la principal diferencia se encuentra en el tamaño de la imagen, en este apartado Alpine sale claro vencedor. Por tanto, mi decisión final es que a no ser que se encuentre algún error importante con imágenes Alpine se usará `golang:1.17-alpine` como imagen base para nuestro proyecto. La versión de Go que he elegido es la 1.17, si es verdad que la versión 1.16 pesaba algo menos, pero me parece algo poco significativo, más significativo me parece que una versión reciba más actualizaciones que la otra, por esto se elije la versión 1.17.
 
 ## Facilitar uso de Docker con nuestro task runner
 
